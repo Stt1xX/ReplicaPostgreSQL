@@ -8,6 +8,7 @@ services:
       - REPLICATION_PASSWORD=replpass
       - NODE_NAME=pg-a
       - ROLE=primary
+      - DOCKER_HOST=tcp://host.docker.internal:2375
     volumes:
       - pg-a-data:/var/lib/postgresql/data
       - ./pgconf/pg_a:/docker-entrypoint-initdb.d:ro
@@ -33,6 +34,7 @@ services:
       - ROLE=replica
       - REPL_MODE=synchronous
       - APPLICATION_NAME=pg_b
+      - DOCKER_HOST=tcp://host.docker.internal:2375
     depends_on:
       - pg-a
     volumes:
@@ -60,6 +62,7 @@ services:
       - ROLE=replica
       - REPL_MODE=asynchronous
       - APPLICATION_NAME=pg_c
+      - DOCKER_HOST=tcp://host.docker.internal:2375
     depends_on:
       - pg-a
     volumes:
@@ -75,34 +78,26 @@ services:
       retries: 5
 
   pgpool:
-    image: bitnami/pgpool:latest
+    build: ./pgpool
     container_name: pgpool
     environment:
-      - PGPOOL_BACKENDS=pg-a:5432:postgres,pg-b:5432:postgres,pg-c:5432:postgres
-      - PGPOOL_SR_CHECK_PERIOD=5
-      - PGPOOL_ENABLE_POOL_HBA=yes
-      - PGPOOL_PORT=9999
-      - PGPOOL_POSTGRES_USERNAME=postgres
-      - PGPOOL_POSTGRES_PASSWORD=postgres
-      - PGPOOL_ADMIN_USERNAME=admin
-      - PGPOOL_ADMIN_PASSWORD=adminpass
-      - PGPOOL_SR_CHECK_USER=postgres
-      - PGPOOL_SR_CHECK_PASSWORD=postgres
-      - PGPOOL_HEALTH_CHECK_USER=postgres
-      - PGPOOL_HEALTH_CHECK_PASSWORD=postgres
-      - PGPOOL_BACKEND_NODES=0:pg-a:5432,1:pg-b:5432,2:pg-c:5432
+      - DOCKER_HOST=tcp://host.docker.internal:2375
     volumes:
-      - ./pgpool/conf/pgpool.conf:/opt/bitnami/pgpool/conf/pgpool.conf
-      - ./pgpool/conf/pool_hba.conf:/opt/bitnami/pgpool/conf/pool_hba.conf
-      - ./pgpool/conf/pool_passwd:/opt/bitnami/pgpool/conf/pool_passwd
+      - ./pgpool/conf/pgpool.conf:/config/pgpool.conf
+      - ./pgpool/conf/pool_hba.conf:/config/pool_hba.conf
+      - ./pgpool/conf/pool_passwd:/etc/pgpool2/pool_passwd 
+      - ./pgpool/failover.sh:/scripts/failover.sh
     ports:
       - 9999:9999
     networks:
       - pgnet
     depends_on:
-      - pg-a
-      - pg-b
-      - pg-c
+      pg-a:
+        condition: service_healthy
+      pg-b:
+        condition: service_healthy
+      pg-c:
+        condition: service_healthy
 
   client:
     image: postgres:15
@@ -110,7 +105,7 @@ services:
     depends_on:
       - pgpool
     volumes:
-      - ./scripts:/scripts
+      - ./pgconf/pg_client:/scripts
     networks:
       - pgnet
     tty: true

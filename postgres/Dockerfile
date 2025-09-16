@@ -6,12 +6,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     cron \
     postgresql-client \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
-
+# Копируем кастомный entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint-custom.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint-custom.sh
-
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint-custom.sh"]
 CMD ["postgres"]
