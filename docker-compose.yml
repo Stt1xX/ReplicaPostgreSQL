@@ -82,10 +82,13 @@ services:
     container_name: pgpool
     environment:
       - DOCKER_HOST=tcp://host.docker.internal:2375
+      - PGPOOL_PCP_USER=pgpool
+      - PGPOOL_PCP_PASSWORD=pgpoolpass
     volumes:
       - ./pgpool/conf/pgpool.conf:/config/pgpool.conf
       - ./pgpool/conf/pool_hba.conf:/config/pool_hba.conf
-      - ./pgpool/conf/pool_passwd:/etc/pgpool2/pool_passwd 
+      - ./pgpool/conf/pool_passwd:/etc/pgpool2/pool_passwd
+      # - ./pgpool/conf/pcp.conf:/etc/pgpool2/pcp.conf
       - ./pgpool/failover.sh:/scripts/failover.sh
     ports:
       - 9999:9999
