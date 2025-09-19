@@ -1,8 +1,0 @@
-docker exec -it pgpool /opt/pgpool-II/bin/pcp_detach_node -U pgpool 1
-docker exec -it pgpool /opt/pgpool-II/bin/pcp_detach_node -U pgpool 2
-
-
-docker exec -it pgpool /opt/pgpool-II/bin/pcp_attach_node -U pgpool 0
-docker exec -it pgpool /opt/pgpool-II/bin/pcp_promote_node -U pgpool 0
-docker exec -it pgpool /opt/pgpool-II/bin/pcp_attach_node -U pgpool 1
-docker exec -it pgpool /opt/pgpool-II/bin/pcp_attach_node -U pgpool 2
