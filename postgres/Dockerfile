@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     cron \
     postgresql-client \
-    docker.io \
+    docker-cli \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем кастомный entrypoint

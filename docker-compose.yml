@@ -9,9 +9,14 @@ services:
       - NODE_NAME=pg-a
       - ROLE=primary
       - DOCKER_HOST=tcp://host.docker.internal:2375
+      
+      # PRIMARY or REPLICA or COMMENTED
+      - RESTORE=PRIMARY
+
     volumes:
       - pg-a-data:/var/lib/postgresql/data
-      - ./pgconf/pg_a:/docker-entrypoint-initdb.d:ro
+      - ./pgconf/pg_a:/docker-entrypoint-initdb.d
+      - ./scripts:/scripts
     networks:
       - pgnet
     ports:
@@ -33,7 +38,7 @@ services:
       - NODE_NAME=pg-b
       - ROLE=replica
       - REPL_MODE=synchronous
-      - APPLICATION_NAME=pg_b
+      - APPLICATION_NAME=pg-b
       - DOCKER_HOST=tcp://host.docker.internal:2375
     depends_on:
       - pg-a
@@ -61,7 +66,7 @@ services:
       - NODE_NAME=pg-c
       - ROLE=replica
       - REPL_MODE=asynchronous
-      - APPLICATION_NAME=pg_c
+      - APPLICATION_NAME=pg-c
       - DOCKER_HOST=tcp://host.docker.internal:2375
     depends_on:
       - pg-a
@@ -88,8 +93,8 @@ services:
       - ./pgpool/conf/pgpool.conf:/config/pgpool.conf
       - ./pgpool/conf/pool_hba.conf:/config/pool_hba.conf
       - ./pgpool/conf/pool_passwd:/etc/pgpool2/pool_passwd
-      # - ./pgpool/conf/pcp.conf:/etc/pgpool2/pcp.conf
-      - ./pgpool/failover.sh:/scripts/failover.sh
+      - ./scripts/failover.sh:/scripts/failover.sh
+      - ./pgpool/conf/pcppass:/root/.pcppass
     ports:
       - 9999:9999
     networks:
