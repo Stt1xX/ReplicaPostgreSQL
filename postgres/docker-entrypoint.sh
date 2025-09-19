@@ -47,7 +47,8 @@ else
     chown -R postgres:postgres ${PGDATA}
     echo "$PRIMARY_HOST:$PRIMARY_PORT:*:postgres:postgres" > /tmp/.pgpass
     chmod 600 /tmp/.pgpass
-    su postgres -c "PGPASSFILE=/tmp/.pgpass pg_basebackup -h $PRIMARY_HOST -p $PRIMARY_PORT -D $PGDATA -U $REPLICATION_USER -v -P --wal-method=stream"
+    SLOT_NAME="replica_slot_${APPLICATION_NAME//-/_}"
+    su postgres -c "PGPASSFILE=/tmp/.pgpass pg_basebackup -h $PRIMARY_HOST -p $PRIMARY_PORT -D $PGDATA -U $REPLICATION_USER -v -P --wal-method=stream --slot=$SLOT_NAME --create-slot"
     touch $PGDATA/standby.signal
     cat >> $PGDATA/postgresql.auto.conf <<EOF
 primary_conninfo = 'host=$PRIMARY_HOST port=$PRIMARY_PORT user=$REPLICATION_USER password=$REPLICATION_PASSWORD application_name=$APPLICATION_NAME'

@@ -57,7 +57,7 @@ for standby in "${STANDBY_CONTAINERS[@]}"; do
              echo \"primary_conninfo = 'host=$6 port=$9 user=$REPL_USER password=$REPL_PASS application_name=$standby'\" >> $PGDATA/postgresql.auto.conf && \
              touch $PGDATA/recovery.signal"
 
-  docker exec -u postgres $standby pg_ctl reload -D $PGDATA
+  docker restart $standby
 
 done
 

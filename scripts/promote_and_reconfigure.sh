@@ -45,13 +45,19 @@ echo "" | docker exec $PGPOOL /opt/pgpool-II/bin/pcp_detach_node -U pgpool 1
 echo "" | docker exec $PGPOOL /opt/pgpool-II/bin/pcp_detach_node -U pgpool 2
 
 for standby in $PG_B $PG_C; do
-    docker start $standby || echo "[promote] Не удалось запустить $standby (возможно, уже запущен)"
-    docker exec $standby bash -c "touch $PGDATA/standby.signal && \
-        sed -i '/^primary_conninfo/d' $PGDATA/postgresql.auto.conf && \
-        echo \"primary_conninfo = 'host=pg-a port=$PRIMARY_PORT user=$REPL_USER password=$REPL_PASS application_name=$standby'\" >> $PGDATA/postgresql.auto.conf"
-    docker stop $standby
+    echo "[promote] Подготовка $standby"
+
     docker start $standby
-    echo "[promote] $standby перенастроен на pg-a"
+    docker exec -u postgres $standby \
+      rm -rf $PGDATA/PG_VERSION # other branch in docker-entrypoint.sh
+
+    # docker exec -u postgres $standby bash -c "
+    # touch $PGDATA/standby.signal &&
+    # echo \"primary_conninfo = 'host=$PG_A port=$PRIMARY_PORT user=$REPL_USER password=$REPL_PASS application_name=$standby'\" >> $PGDATA/postgresql.auto.conf &&
+    # echo \"recovery_target_timeline = 'latest'\" >> $PGDATA/postgresql.auto.conf
+    # "
+    docker restart $standby
+    echo "[promote] $standby синхронизирован и готов к работе"
 done
 
 echo "" | docker exec $PGPOOL /opt/pgpool-II/bin/pcp_attach_node -U pgpool 1
